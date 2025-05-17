@@ -1,0 +1,71 @@
+from functools import lru_cache
+from typing import Literal
+
+from pydantic import Field, PostgresDsn, RedisDsn, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """
+    Конфигурация приложения.
+
+    Attributes:
+        env: Окружение (dev/prod)
+        debug: Режим отладки
+        api_prefix: Префикс для API эндпоинтов
+        database_url: URL подключения к PostgreSQL
+        redis_url: URL подключения к Redis
+        jwt_secret: Секретный ключ для JWT токенов
+        jwt_expires: Время жизни JWT токена в минутах
+        update_delay: Задержка обновления данных в секундах
+        free_tier_max_profit: Максимальный профит для бесплатного тарифа в %
+        bookmaker_api_keys: API ключи букмекеров
+    """
+
+    env: Literal["dev", "prod"] = "dev"
+    debug: bool = False
+    api_prefix: str = "/api/v1"
+
+    # База данных
+    database_url: PostgresDsn = Field(
+        default="postgresql+asyncpg://user:pass@localhost:5432/forkscan",
+        description="PostgreSQL connection URL",
+    )
+    redis_url: RedisDsn = Field(
+        default="redis://localhost:6379/0",
+        description="Redis connection URL",
+    )
+
+    # JWT настройки
+    jwt_secret: SecretStr = Field(default="secret", description="JWT secret key")
+    jwt_expires: int = Field(default=60 * 24, description="JWT token expiration in minutes")
+
+    # Настройки сервиса
+    update_delay: int = Field(default=10, ge=5, description="Update delay in seconds")
+    free_tier_max_profit: float = Field(default=0.5, ge=0, le=100, description="Free tier max profit %")
+
+    # API ключи букмекеров
+    bookmaker_api_keys: dict[str, SecretStr] = Field(
+        default_factory=dict,
+        description="Bookmaker API keys",
+    )
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """
+    Получить настройки приложения.
+
+    Returns:
+        Settings: Объект с настройками
+
+    Note:
+        Использует кэширование через @lru_cache для оптимизации
+    """
+    return Settings()
