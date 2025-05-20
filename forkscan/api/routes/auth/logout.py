@@ -1,5 +1,5 @@
+from fastapi import APIRouter, Depends, HTTPException, Request
 from jose import jwt
-from fastapi import Request, Depends, HTTPException, APIRouter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse

@@ -1,6 +1,6 @@
 import secrets
 import uuid
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from forkscan.core.config import settings
-from forkscan.infrastructure.database.models import User, RefreshToken
+from forkscan.infrastructure.database.models import RefreshToken, User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -33,15 +33,11 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 def create_refresh_token(user_id: int, email: str, expires_delta: timedelta | None = None):
-    expires = datetime.now(UTC) + (expires_delta or timedelta(days=settings.jwt_refresh_expires_days))
+    expires = datetime.now(UTC) + (
+        expires_delta or timedelta(days=settings.jwt_refresh_expires_days)
+    )
     jti = str(uuid.uuid4())
-    payload = {
-        "user_id": user_id,
-        "email": email,
-        "exp": expires,
-        "jti": jti,
-        "type": "refresh"
-    }
+    payload = {"user_id": user_id, "email": email, "exp": expires, "jti": jti, "type": "refresh"}
     refresh_token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
     return refresh_token, jti, expires
 
@@ -58,9 +54,7 @@ async def save_refresh_token(session: AsyncSession, user_id: int, jti: str):
 
 
 async def revoke_refresh_token(session: AsyncSession, jti: str):
-    res = await session.execute(
-        select(RefreshToken).where(RefreshToken.token == jti)
-    )
+    res = await session.execute(select(RefreshToken).where(RefreshToken.token == jti))
     db_token = res.scalar_one_or_none()
     if db_token:
         db_token.revoked = True
@@ -82,16 +76,18 @@ async def get_refresh_token(session: AsyncSession, jti: str, user_id: int):
         select(RefreshToken).where(
             RefreshToken.token == jti,
             RefreshToken.user_id == user_id,
-            RefreshToken.revoked == False
+            RefreshToken.revoked == False,
         )
     )
     return res.scalar_one_or_none()
+
 
 def decode_refresh_token(token: str) -> dict:
     payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     if payload.get("type") != "refresh":
         raise ValueError("Invalid token type")
     return payload
+
 
 async def find_valid_refresh_token(session, jti: str, user_id: int):
     res = await session.execute(

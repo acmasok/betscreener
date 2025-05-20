@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
@@ -29,9 +29,7 @@ async def login(data: UserLogin, session: AsyncSession = Depends(get_db)):
         token_data,
         expires_delta=timedelta(minutes=settings.jwt_expires),
     )
-    refresh_token, jti, refresh_exp = create_refresh_token(
-        user.id, user.email
-    )
+    refresh_token, jti, refresh_exp = create_refresh_token(user.id, user.email)
 
     # Сохраняем refresh_token (или jti) в базе
     db_refresh_token = RefreshToken(

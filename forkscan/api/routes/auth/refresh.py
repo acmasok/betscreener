@@ -1,11 +1,15 @@
 from datetime import timedelta
 
-from fastapi import Request, Depends, HTTPException, APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from forkscan.core.config import settings
 from forkscan.infrastructure.database.session import get_db
-from forkscan.services.auth import create_access_token, decode_refresh_token, find_valid_refresh_token
+from forkscan.services.auth import (
+    create_access_token,
+    decode_refresh_token,
+    find_valid_refresh_token,
+)
 
 router = APIRouter()
 
