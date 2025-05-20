@@ -86,3 +86,19 @@ async def get_refresh_token(session: AsyncSession, jti: str, user_id: int):
         )
     )
     return res.scalar_one_or_none()
+
+def decode_refresh_token(token: str) -> dict:
+    payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    if payload.get("type") != "refresh":
+        raise ValueError("Invalid token type")
+    return payload
+
+async def find_valid_refresh_token(session, jti: str, user_id: int):
+    res = await session.execute(
+        select(RefreshToken).where(
+            RefreshToken.token == jti,
+            RefreshToken.user_id == user_id,
+            RefreshToken.revoked == False,
+        )
+    )
+    return res.scalar_one_or_none()

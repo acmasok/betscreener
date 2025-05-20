@@ -27,12 +27,10 @@ async def login(data: UserLogin, session: AsyncSession = Depends(get_db)):
     token_data = {"user_id": user.id, "email": user.email}
     access_token = create_access_token(
         token_data,
-        secret=settings.jwt_secret,
-        algorithm=settings.jwt_algorithm,
         expires_delta=timedelta(minutes=settings.jwt_expires),
     )
     refresh_token, jti, refresh_exp = create_refresh_token(
-        user.id, user.email, settings.jwt_secret, settings.jwt_algorithm
+        user.id, user.email
     )
 
     # Сохраняем refresh_token (или jti) в базе
