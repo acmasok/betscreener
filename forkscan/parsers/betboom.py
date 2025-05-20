@@ -1,17 +1,19 @@
 import asyncio
-
-import websockets
-import asyncio
 import logging
 from typing import Optional
+
+import websockets
+
 from forkscan.parsers.betboomtest.market_betstats_ws_pb2 import (
     MainRequest,
     MainResponse,
-    SubscribeRequest,
     PingRequest,
+    SubscribeRequest,
 )
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 async def subscribe_match_market(
     url: str, match_id: int, uid: str, token: Optional[str] = None
@@ -71,9 +73,7 @@ async def subscribe_match_market(
             # Обработка
             if message_type == "subscribe_match_market":
                 info = resp.subscribe_match_market
-                logger.info(
-                    "Subscribed: code=%d, status=%r", info.code, info.status
-                )
+                logger.info("Subscribed: code=%d, status=%r", info.code, info.status)
             elif message_type == "betstats_changed":
                 stats = resp.betstats_changed
                 logger.info("Betstats changed: %r", stats)

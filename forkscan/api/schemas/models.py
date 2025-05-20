@@ -12,10 +12,11 @@ class UserLogin(BaseModel):
     password: str
 
 
-class UserOut(BaseModel):
+class UserResponse(BaseModel):
     id: int
     email: EmailStr
-    promo_code: str  # показываем пользователю его промокод
+    promo_code: str
+    referrer_id: int | None = None
 
 
 class PromoCodeUpdate(BaseModel):

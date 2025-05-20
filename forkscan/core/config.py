@@ -36,17 +36,23 @@ class Settings(BaseSettings):
 
     # JWT настройки
     jwt_secret: SecretStr = Field(default="secret", description="JWT secret key")
-    jwt_expires: int = Field(default=60 * 24, description="JWT token expiration in minutes")
+    jwt_expires: int = Field(default=15, description="JWT token expiration in minutes")
+    jwt_refresh_expires_days: int = Field(
+        default=20, description="JWT refresh token expiration in days"
+    )
     jwt_algorithm: str = Field(default="HS256", description="JWT algorithm")
 
     # Настройки сервиса
     update_delay: int = Field(default=10, ge=5, description="Update delay in seconds")
-    free_tier_max_profit: float = Field(default=0.5, ge=0, le=100, description="Free tier max profit %")
+    free_tier_max_profit: float = Field(
+        default=0.5, ge=0, le=100, description="Free tier max profit %"
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
     )
+
 
 settings = Settings()

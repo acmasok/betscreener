@@ -56,10 +56,7 @@ class BetBoomWebSocket:
         if not self._ws:
             return
 
-        subscribe_msg = {
-            "type": "subscribe",
-            "data": {"sport_id": 1}  # 1 = football
-        }
+        subscribe_msg = {"type": "subscribe", "data": {"sport_id": 1}}  # 1 = football
         await self._ws.send(str(subscribe_msg))
 
     async def receive_data(self) -> Dict[str, Any]:

@@ -1,10 +1,9 @@
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, UTC, timezone
+from datetime import UTC, datetime, timezone
 from enum import Enum, auto
-from typing import Optional, Dict, Any, TypeVar, Generic, Tuple
-
+from typing import Any, Dict, Generic, Optional, Tuple, TypeVar
 from unicodedata import normalize
 
 
@@ -42,7 +41,7 @@ class EventStatus(Enum):
     FINISHED = "finished"
 
 
-T = TypeVar('T', bound='BaseSportEvent')
+T = TypeVar("T", bound="BaseSportEvent")
 
 
 @dataclass(frozen=True)
@@ -53,14 +52,13 @@ class EventKey:
         return f"EventKey(teams='{self.teams[0]}' vs '{self.teams[1]}')"
 
     @classmethod
-    def create(cls, team1: str, team2: str) -> 'EventKey':
+    def create(cls, team1: str, team2: str) -> "EventKey":
         if not team1 or not team2:
             raise ValueError(f"Team names cannot be empty: team1='{team1}', team2='{team2}'")
 
-        normalized_teams = sorted([
-            cls._normalize_team_name(team1),
-            cls._normalize_team_name(team2)
-        ])
+        normalized_teams = sorted(
+            [cls._normalize_team_name(team1), cls._normalize_team_name(team2)]
+        )
 
         return cls(tuple(normalized_teams))
 
@@ -75,23 +73,49 @@ class EventKey:
 
         # Создаем словарь для транслитерации русских букв
         ru_en = {
-            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd',
-            'е': 'e', 'ё': 'e', 'ж': 'zh', 'з': 'z', 'и': 'i',
-            'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
-            'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
-            'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch',
-            'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '',
-            'э': 'e', 'ю': 'yu', 'я': 'ya'
+            "а": "a",
+            "б": "b",
+            "в": "v",
+            "г": "g",
+            "д": "d",
+            "е": "e",
+            "ё": "e",
+            "ж": "zh",
+            "з": "z",
+            "и": "i",
+            "й": "y",
+            "к": "k",
+            "л": "l",
+            "м": "m",
+            "н": "n",
+            "о": "o",
+            "п": "p",
+            "р": "r",
+            "с": "s",
+            "т": "t",
+            "у": "u",
+            "ф": "f",
+            "х": "h",
+            "ц": "ts",
+            "ч": "ch",
+            "ш": "sh",
+            "щ": "sch",
+            "ъ": "",
+            "ы": "y",
+            "ь": "",
+            "э": "e",
+            "ю": "yu",
+            "я": "ya",
         }
 
         # Транслитерация русских букв
-        name = ''.join(ru_en.get(c, c) for c in name)
+        name = "".join(ru_en.get(c, c) for c in name)
 
         # Убираем диакритические знаки с латинских букв
-        name = normalize('NFKD', name).encode('ASCII', 'ignore').decode('ASCII')
+        name = normalize("NFKD", name).encode("ASCII", "ignore").decode("ASCII")
 
         # Оставляем только буквы и цифры
-        name = re.sub(r'[^a-z0-9]', '', name)
+        name = re.sub(r"[^a-z0-9]", "", name)
 
         return name
 
@@ -99,6 +123,7 @@ class EventKey:
 @dataclass
 class EventNormalizer(Generic[T], ABC):
     """Абстрактный класс для нормализации данных от разных букмекеров"""
+
     bookmaker: BookmakerName
 
     @abstractmethod
@@ -147,6 +172,7 @@ class MarketType(Enum):
 @dataclass(kw_only=True)
 class BaseSportEvent(ABC):
     """Базовый класс для всех спортивных событий"""
+
     bookmaker_id: str  # ID события у конкретного букмекера
     start_time: datetime
     sport_type: SportType
@@ -176,21 +202,20 @@ class FootballEvent(BaseSportEvent):
     @staticmethod
     def _convert_status(status: str) -> EventStatus:
         """Преобразует статус из формата букмекера в наш формат"""
-        status_map = {
-            "prematch": EventStatus.PREMATCH,
-            "live": EventStatus.LIVE
-        }
+        status_map = {"prematch": EventStatus.PREMATCH, "live": EventStatus.LIVE}
         return status_map.get(status.lower(), EventStatus.PREMATCH)
 
     @classmethod
-    def create(cls,
-               bookmaker: BookmakerName,
-               bookmaker_id: str,
-               start_time: int,
-               tournament_name: str,
-               team1: str,
-               team2: str,
-               status: str) -> 'FootballEvent':  # Добавили параметр status
+    def create(
+        cls,
+        bookmaker: BookmakerName,
+        bookmaker_id: str,
+        start_time: int,
+        tournament_name: str,
+        team1: str,
+        team2: str,
+        status: str,
+    ) -> "FootballEvent":  # Добавили параметр status
         return cls(
             bookmaker_id=bookmaker_id,
             event_name=f"{team1} - {team2}",
@@ -200,13 +225,14 @@ class FootballEvent(BaseSportEvent):
             status=cls._convert_status(status),  # Преобразуем входящий статус
             bookmaker=bookmaker,
             team1=team1,
-            team2=team2
+            team2=team2,
         )
 
 
 @dataclass
 class EventManager:
     """Менеджер для управления событиями"""
+
     events: Dict[EventKey, Dict[BookmakerName, BaseSportEvent]] = field(default_factory=dict)
     normalizers: Dict[BookmakerName, Dict[SportType, EventNormalizer]] = field(default_factory=dict)
 
@@ -241,8 +267,10 @@ class EventManager:
         # Находим все ключи событий
         keys_to_remove = []
         for event_key, bookmaker_events in self.events.items():
-            if (bookmaker in bookmaker_events and
-                    bookmaker_events[bookmaker].bookmaker_id == bookmaker_id):
+            if (
+                bookmaker in bookmaker_events
+                and bookmaker_events[bookmaker].bookmaker_id == bookmaker_id
+            ):
                 if len(bookmaker_events) == 1:
                     # Если это единственное событие для данного ключа,
                     # помечаем весь ключ на удаление

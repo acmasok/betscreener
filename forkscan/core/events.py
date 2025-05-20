@@ -1,15 +1,18 @@
 from abc import ABC
 from dataclasses import dataclass
-from datetime import datetime, UTC
-from typing import Optional, Dict
+from datetime import UTC, datetime
+from typing import Dict, Optional
 
-from forkscan.core.types import SportType, BookmakerName
+from forkscan.core.types import BookmakerName, SportType
 
 
 @dataclass
 class EventIdentifiers:
     """Класс для хранения идентификаторов события у разных букмекеров"""
-    bookmaker_ids: Dict[BookmakerName, str]  # {BookmakerName.WINLINE: "123", BookmakerName.FONBET: "456"}
+
+    bookmaker_ids: Dict[
+        BookmakerName, str
+    ]  # {BookmakerName.WINLINE: "123", BookmakerName.FONBET: "456"}
 
     def add_bookmaker_id(self, bookmaker: BookmakerName, _id: str):
         self.bookmaker_ids[bookmaker] = _id
@@ -24,6 +27,7 @@ class EventIdentifiers:
 @dataclass(kw_only=True)
 class BaseSportEvent(ABC):
     """Базовый класс для всех спортивных событий"""
+
     identifiers: EventIdentifiers  # ID события у разных букмекеров
     event_name: str
     start_time: datetime
@@ -52,14 +56,16 @@ class FootballEvent(BaseSportEvent):
     corners: Optional[Dict[str, int]] = None
 
     @classmethod
-    def create(cls,
-               bookmaker: BookmakerName,
-               bookmaker_id: str,
-               event_name: str,
-               start_time: datetime,
-               league: str,
-               home_team: str,
-               away_team: str) -> 'FootballEvent':
+    def create(
+        cls,
+        bookmaker: BookmakerName,
+        bookmaker_id: str,
+        event_name: str,
+        start_time: datetime,
+        league: str,
+        home_team: str,
+        away_team: str,
+    ) -> "FootballEvent":
         """Фабричный метод для создания события"""
         identifiers = EventIdentifiers(bookmaker_ids={bookmaker: bookmaker_id})
         return cls(
@@ -70,5 +76,5 @@ class FootballEvent(BaseSportEvent):
             league=league,
             status="prematch",
             home_team=home_team,
-            away_team=away_team
+            away_team=away_team,
         )

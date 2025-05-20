@@ -10,9 +10,14 @@ class FonbetParser:
     def __init__(self, event_manager: EventManager):
         self.manager = event_manager
         self.url = "https://line-lb11.bk6bba-resources.com/ma/events/list?lang=ru&version=52043578381&scopeMarket=1600"
-        self.support_sports = {"football": SportType.FOOTBALL, "hockey": SportType.HOCKEY, "tennis": SportType.TENNIS,
-                               "basketball": SportType.BASKETBALL, "table-tennis": SportType.TABLETENNIS,
-                               "esports": SportType.ESPORTS}
+        self.support_sports = {
+            "football": SportType.FOOTBALL,
+            "hockey": SportType.HOCKEY,
+            "tennis": SportType.TENNIS,
+            "basketball": SportType.BASKETBALL,
+            "table-tennis": SportType.TABLETENNIS,
+            "esports": SportType.ESPORTS,
+        }
         self.active_events: Set[str] = set()
         self.missing_events_counter: Dict[str, int] = {}
         self.known_factors = {
@@ -21,14 +26,14 @@ class FonbetParser:
 
     @staticmethod
     def _create_event(
-            bookmaker: BookmakerName,
-            event_id: str,
-            start_time: int,
-            team1: str,
-            team2: str,
-            status: str,
-            tournament_name: str,
-            sport_type: SportType
+        bookmaker: BookmakerName,
+        event_id: str,
+        start_time: int,
+        team1: str,
+        team2: str,
+        status: str,
+        tournament_name: str,
+        sport_type: SportType,
     ) -> Optional[SportEvent]:
         """
         Создает объект футбольного события из данных Fonbet
@@ -53,7 +58,7 @@ class FonbetParser:
                 team1=team1,
                 team2=team2,
                 status=status,
-                sport_type=sport_type
+                sport_type=sport_type,
             )
         except Exception as e:
             print(f"Error creating football event: {e}")
@@ -62,14 +67,12 @@ class FonbetParser:
     @staticmethod
     def _create_sports_lookup(sports_info: list) -> Dict[int, str]:
         """Создает словарь для поиска видов спорта"""
-        return {
-            sport["id"]: sport["alias"]
-            for sport in sports_info
-            if sport["kind"] == "sport"
-        }
+        return {sport["id"]: sport["alias"] for sport in sports_info if sport["kind"] == "sport"}
 
     @staticmethod
-    def _create_tournaments_dict(sports_info: list, sports_lookup: Dict[int, str]) -> Dict[int, dict]:
+    def _create_tournaments_dict(
+        sports_info: list, sports_lookup: Dict[int, str]
+    ) -> Dict[int, dict]:
         """Создает словарь турниров с информацией о виде спорта"""
         tournaments = {}
 
@@ -83,7 +86,7 @@ class FonbetParser:
 
             tournaments[sport["id"]] = {
                 "name_sport": sports_lookup[parent_id],
-                "name_thournirer": sport["name"]
+                "name_thournirer": sport["name"],
             }
 
         return tournaments
@@ -97,17 +100,18 @@ class FonbetParser:
     def _is_valid_event(event: dict) -> bool:
         """Проверяет, является ли событие валидным для обработки"""
         return (
-                event.get("level") == 1 and
-                event.get("kind") == 1 and
-                not event.get("notMatch") and
-                not event.get("noEventView") and
-                event.get("place") != "notActive"
+            event.get("level") == 1
+            and event.get("kind") == 1
+            and not event.get("notMatch")
+            and not event.get("noEventView")
+            and event.get("place") != "notActive"
         )
 
-    def _process_single_event(self,
-                              event: dict,
-                              sport_data: dict,
-                              ) -> None:
+    def _process_single_event(
+        self,
+        event: dict,
+        sport_data: dict,
+    ) -> None:
         """Обработка одного события"""
         if not sport_data.get("name_sport") in self.support_sports:
             return
@@ -122,7 +126,7 @@ class FonbetParser:
             team1=event["team1"],
             team2=event["team2"],
             status=status,
-            sport_type=self.support_sports.get(sport_data["name_sport"])
+            sport_type=self.support_sports.get(sport_data["name_sport"]),
         )
         self.manager.add_event(event)
 
@@ -151,7 +155,11 @@ class FonbetParser:
     def _fetch_data(self) -> tuple[list, list, list]:
         """Получает данные от API Fonbet"""
         response = requests.get(self.url, timeout=5).json()
-        return response.get("events", []), response.get("sports", []), response.get("customFactors", [])
+        return (
+            response.get("events", []),
+            response.get("sports", []),
+            response.get("customFactors", []),
+        )
 
     def _decode_custom_factors(self, custom_factors_info, event_data, name_sport) -> None:
         """
@@ -209,7 +217,7 @@ if __name__ == "__main__":
 
     while True:
         fonbet.parse()
-        print('dsfadafsdaf')
+        print("dsfadafsdaf")
         time.sleep(1)
     # Одиночный запуск
     # run_parser(manager)

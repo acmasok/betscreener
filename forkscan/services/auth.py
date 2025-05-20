@@ -1,6 +1,9 @@
 from passlib.context import CryptContext
+
 from forkscan.domain.repositories.user_repository import UserRepository
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 class AuthService:
     def __init__(self, user_repo: UserRepository):
@@ -15,11 +18,13 @@ class AuthService:
             if not promokode_obj:
                 raise ValueError("Промокод не найден")
         hashed_password = pwd_context.hash(password)
-        user = await self.user_repo.create({
-            "email": email,
-            "hashed_password": hashed_password,
-            "promokode": promokode_obj["id"] if promokode_obj else None
-        })
+        user = await self.user_repo.create(
+            {
+                "email": email,
+                "hashed_password": hashed_password,
+                "promokode": promokode_obj["id"] if promokode_obj else None,
+            }
+        )
         return user
 
     async def login(self, email: str, password: str):

@@ -1,18 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Set, Optional, Type
+from typing import Dict, Optional, Set, Type
 
 import requests
 
 from forkscan.core.types import (
+    BaseSportEvent,
+    BasketballEvent,
+    BookmakerName,
+    EsportsEvent,
     EventManager,
     FootballEvent,
     HockeyEvent,
-    TennisEvent,
-    BasketballEvent,
     TableTennisEvent,
-    EsportsEvent,
-    BookmakerName,
-    BaseSportEvent
+    TennisEvent,
 )
 
 
@@ -21,7 +21,14 @@ class BaseBookmakerParser(ABC):
 
     def __init__(self, event_manager: EventManager):
         self.manager = event_manager
-        self.support_sports = {"football", "hockey", "tennis", "basketball", "table-tennis", "esports"}
+        self.support_sports = {
+            "football",
+            "hockey",
+            "tennis",
+            "basketball",
+            "table-tennis",
+            "esports",
+        }
         self.active_events: Set[str] = set()
 
         # Маппинг для создания правильного типа события
@@ -31,7 +38,7 @@ class BaseBookmakerParser(ABC):
             "tennis": (TennisEvent, self._create_sport_event),
             "basketball": (BasketballEvent, self._create_sport_event),
             "table-tennis": (TableTennisEvent, self._create_sport_event),
-            "esports": (EsportsEvent, self._create_sport_event)
+            "esports": (EsportsEvent, self._create_sport_event),
         }
 
     @property
@@ -46,10 +53,9 @@ class BaseBookmakerParser(ABC):
         """Базовый URL для API букмекера"""
         pass
 
-    def _create_sport_event(self,
-                            event: Dict,
-                            tournament_name: str,
-                            event_class: Type[BaseSportEvent]) -> Optional[BaseSportEvent]:
+    def _create_sport_event(
+        self, event: Dict, tournament_name: str, event_class: Type[BaseSportEvent]
+    ) -> Optional[BaseSportEvent]:
         """
         Базовый метод создания спортивного события
 
@@ -69,7 +75,7 @@ class BaseBookmakerParser(ABC):
                 tournament_name=tournament_name,
                 team1=self._get_team1(event),
                 team2=self._get_team2(event),
-                status=self._get_event_status(event)
+                status=self._get_event_status(event),
             )
         except KeyError as e:
             print(f"Missing required field in event data: {e}")
@@ -139,10 +145,7 @@ class BaseBookmakerParser(ABC):
         """
         pass
 
-    def _process_single_event(self,
-                              event: Dict,
-                              sport_data: Dict,
-                              new_event_ids: Set[str]) -> None:
+    def _process_single_event(self, event: Dict, sport_data: Dict, new_event_ids: Set[str]) -> None:
         """
         Обработка одного события
 
