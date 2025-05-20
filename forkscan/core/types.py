@@ -32,8 +32,8 @@ class SportType(Enum):
     BASKETBALL = auto()
     TENNIS = auto()
     HOCKEY = auto()
-    CSGO = auto()
-    DOTA2 = auto()
+    ESPORTS = auto()
+    TABLETENNIS = auto()
 
 
 class EventStatus(Enum):

@@ -1,4 +1,3 @@
-from functools import lru_cache
 from typing import Literal
 
 from pydantic import Field, PostgresDsn, RedisDsn, SecretStr
@@ -19,7 +18,6 @@ class Settings(BaseSettings):
         jwt_expires: Время жизни JWT токена в минутах
         update_delay: Задержка обновления данных в секундах
         free_tier_max_profit: Максимальный профит для бесплатного тарифа в %
-        bookmaker_api_keys: API ключи букмекеров
     """
 
     env: Literal["dev", "prod"] = "dev"
@@ -39,16 +37,11 @@ class Settings(BaseSettings):
     # JWT настройки
     jwt_secret: SecretStr = Field(default="secret", description="JWT secret key")
     jwt_expires: int = Field(default=60 * 24, description="JWT token expiration in minutes")
+    jwt_algorithm: str = Field(default="HS256", description="JWT algorithm")
 
     # Настройки сервиса
     update_delay: int = Field(default=10, ge=5, description="Update delay in seconds")
     free_tier_max_profit: float = Field(default=0.5, ge=0, le=100, description="Free tier max profit %")
-
-    # API ключи букмекеров
-    bookmaker_api_keys: dict[str, SecretStr] = Field(
-        default_factory=dict,
-        description="Bookmaker API keys",
-    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -56,16 +49,4 @@ class Settings(BaseSettings):
         case_sensitive=True,
     )
 
-
-@lru_cache
-def get_settings() -> Settings:
-    """
-    Получить настройки приложения.
-
-    Returns:
-        Settings: Объект с настройками
-
-    Note:
-        Использует кэширование через @lru_cache для оптимизации
-    """
-    return Settings()
+settings = Settings()
