@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
+
 
 class User(Base):
     __tablename__ = "users"
@@ -9,8 +10,5 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     username = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    promo_code = Column(String, unique=True, nullable=False)  # теперь обязательное и уникальное поле
-
-    __table_args__ = (
-        UniqueConstraint('promo_code', name='uq_user_promo_code'),
-    )
+    promo_code = Column(String, unique=True, nullable=False)
+    referrer_id = Column(Integer, ForeignKey("users.id"), nullable=True)

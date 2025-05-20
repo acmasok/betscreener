@@ -17,3 +17,6 @@ class UserOut(BaseModel):
     email: EmailStr
     username: str
     promo_code: str  # показываем пользователю его промокод
+
+class PromoCodeUpdate(BaseModel):
+    new_promo_code: constr(min_length=4, max_length=20)
