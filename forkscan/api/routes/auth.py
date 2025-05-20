@@ -15,6 +15,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 
+def get_auth_service() -> AuthService:
+    # внедрение зависимости user_repo
+    ...
+
 async def get_current_user(
         token: str = Depends(oauth2_scheme),
         db: AsyncSession = Depends(get_db)
@@ -45,7 +49,6 @@ def register(user: UserRegister, session: AsyncSession = Depends(get_db)):
         user_obj = register_user(
             repo,
             str(user.email),
-            user.username,
             user.password,
             user.promo_code  # это реферальный код (referrer)
         )

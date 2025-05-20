@@ -13,11 +13,11 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-def register_user(user_repo: UserRepository, email: str, username: str, password: str, promo_code: str = None):
+def register_user(user_repo: UserRepository, email: str, password: str, promo_code: str = None):
     if user_repo.get_by_email(email):
         raise ValueError("Email already registered")
     hashed_pwd = hash_password(password)
-    return user_repo.create(email, username, hashed_pwd, promo_code)
+    return user_repo.create(email, hashed_pwd, promo_code)
 
 def generate_promo_code(length=5):
     alphabet = string.ascii_uppercase + string.digits

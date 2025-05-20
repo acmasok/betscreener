@@ -25,10 +25,9 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
-    async def create(self, email: str, username: str, hashed_password: str, promo_code: str, referrer_id: int = None):
+    async def create(self, email: str, hashed_password: str, promo_code: str, referrer_id: int = None):
         user = User(
             email=email,
-            username=username,
             hashed_password=hashed_password,
             promo_code=promo_code,
             referrer_id=referrer_id
