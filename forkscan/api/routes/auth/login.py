@@ -1,0 +1,58 @@
+from datetime import UTC, datetime, timedelta
+
+from fastapi import Depends, HTTPException, APIRouter
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
+
+from forkscan.api.routes.auth.utils import pwd_context
+from forkscan.api.schemas.models import UserLogin
+from forkscan.core.config import settings
+from forkscan.infrastructure.database.models import RefreshToken, User
+from forkscan.infrastructure.database.session import get_db
+from forkscan.services.auth import create_access_token, create_refresh_token
+
+router = APIRouter()
+
+
+# Авторизация
+@router.post("/login")
+async def login(data: UserLogin, session: AsyncSession = Depends(get_db)):
+    res = await session.execute(select(User).where(User.email == data.email))
+    user = res.scalar_one_or_none()
+    if not user or not pwd_context.verify(data.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Неверные email или пароль")
+
+    # Генерируем JWT (по желанию)
+    token_data = {"user_id": user.id, "email": user.email}
+    access_token = create_access_token(
+        token_data,
+        secret=settings.jwt_secret,
+        algorithm=settings.jwt_algorithm,
+        expires_delta=timedelta(minutes=settings.jwt_expires),
+    )
+    refresh_token, jti, refresh_exp = create_refresh_token(
+        user.id, user.email, settings.jwt_secret, settings.jwt_algorithm
+    )
+
+    # Сохраняем refresh_token (или jti) в базе
+    db_refresh_token = RefreshToken(
+        user_id=user.id,
+        token=jti,  # сохраняем только jti, а не весь jwt
+        created_at=datetime.now(UTC),
+        revoked=False,
+    )
+    session.add(db_refresh_token)
+    await session.commit()
+
+    # Кладём refresh_token в httpOnly cookie
+    response = JSONResponse({"access_token": access_token, "token_type": "bearer"})
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,  # только по https!
+        samesite="strict",
+        max_age=settings.jwt_refresh_expires_days * 60 * 60 * 24,
+    )
+    return response
