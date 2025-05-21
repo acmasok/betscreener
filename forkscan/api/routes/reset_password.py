@@ -30,7 +30,9 @@ async def forgot_password(data: ResetPasswordRequest, session: AsyncSession = De
         "exp": datetime.now(UTC) + timedelta(hours=1),  # токен живет 1 час
         "type": "reset",
     }
-    reset_token = jwt.encode(token_data, settings.jwt_secret_value, algorithm=settings.jwt_algorithm)
+    reset_token = jwt.encode(
+        token_data, settings.jwt_secret_value, algorithm=settings.jwt_algorithm
+    )
     reset_link = f"{settings.frontend_url}/reset-password?token={reset_token}"
 
     # === Здесь отправь письмо! ===
@@ -45,7 +47,9 @@ async def forgot_password(data: ResetPasswordRequest, session: AsyncSession = De
 async def reset_password(data: ResetPasswordConfirm, session: AsyncSession = Depends(get_db)):
     # Валидация токена
     try:
-        payload = jwt.decode(data.token, settings.jwt_secret_value, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            data.token, settings.jwt_secret_value, algorithms=[settings.jwt_algorithm]
+        )
         if payload.get("type") != "reset":
             raise HTTPException(status_code=400, detail="Invalid token type")
         user_id = payload.get("user_id")

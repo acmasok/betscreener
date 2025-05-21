@@ -55,7 +55,7 @@ class Settings(BaseSettings):
         env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="allow"  # <-- ЭТО ПОЗВОЛИТ ИГНОРИРОВАТЬ ЛИШНИЕ ПЕРЕМЕННЫЕ В .env
+        extra="allow",  # <-- ЭТО ПОЗВОЛИТ ИГНОРИРОВАТЬ ЛИШНИЕ ПЕРЕМЕННЫЕ В .env
     )
 
     @property
