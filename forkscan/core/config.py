@@ -1,8 +1,6 @@
 from typing import Literal
-
 from pydantic import Field, PostgresDsn, RedisDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 class Settings(BaseSettings):
     """
@@ -52,7 +50,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        extra="allow"  # <-- ЭТО ПОЗВОЛИТ ИГНОРИРОВАТЬ ЛИШНИЕ ПЕРЕМЕННЫЕ В .env
     )
-
 
 settings = Settings()
