@@ -1,5 +1,7 @@
 import redis.asyncio as redis
+
 from forkscan.core.config import settings
+
 
 async def get_redis() -> redis.Redis:
     """Создаёт и возвращает подключение к Redis."""
@@ -8,6 +10,7 @@ async def get_redis() -> redis.Redis:
         decode_responses=True,
         encoding="utf-8",
     )
+
 
 async def close_redis(client: redis.Redis) -> None:
     """Корректно закрывает соединение с Redis."""

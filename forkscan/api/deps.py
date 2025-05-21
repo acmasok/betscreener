@@ -1,5 +1,6 @@
-from fastapi import Request, Depends
 import redis.asyncio as redis
+from fastapi import Depends, Request
+
 
 async def get_redis_client(request: Request) -> redis.Redis:
     """FastAPI Dependency для получения Redis из app.state."""

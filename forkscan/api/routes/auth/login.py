@@ -1,18 +1,18 @@
 from datetime import UTC, datetime, timedelta
 
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from forkscan.api.deps import get_redis_client
-from forkscan.api.routes.auth.utils import pwd_context
+from forkscan.api.routes.auth.utils import get_ban_time, pwd_context
 from forkscan.api.schemas.models import UserLogin
 from forkscan.core.config import settings
 from forkscan.infrastructure.database.models import RefreshToken, User
 from forkscan.infrastructure.database.session import get_db
 from forkscan.services.auth import create_access_token, create_refresh_token
-import redis.asyncio as redis
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -23,7 +23,7 @@ async def login(
     data: UserLogin,
     session: AsyncSession = Depends(get_db),
     request: Request = None,
-    redis_client: redis.Redis = Depends(get_redis_client)
+    redis_client: redis.Redis = Depends(get_redis_client),
 ):
     # Получаем IP пользователя (можно сделать по email, но IP лучше для защиты)
     ip = request.client.host
@@ -41,7 +41,8 @@ async def login(
         # 3. Неудачная попытка: увеличиваем счетчик
         fails = await redis_client.incr(key)
         if fails == 1:
-            await redis_client.expire(key, settings.ban_seconds)
+            ban_time = get_ban_time(fails)
+            await redis_client.expire(key, ban_time)
         raise HTTPException(status_code=400, detail="Inappropriate email or password")
 
     # 4. Успешная попытка: сбрасываем счетчик

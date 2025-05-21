@@ -28,8 +28,11 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
 
     # Защита от перебора
-    max_failed_attempts: int = 5
-    ban_seconds: int = 30 * 60
+    max_failed_attempts: int = 10 # Максимум попыток перед баном
+    min_attempts_for_ban: int = 5 # Минимальное количество ошибок для начала бана
+    initial_ban_time: int = 60 * 10  # 10 минут (в секундах)
+    max_ban_time: int = 86400  # 24 часа (в секундах)
+    ban_multiplier: int = 2  # Множитель для увеличения времени бана
 
     # База данных
     database_url: PostgresDsn = Field(

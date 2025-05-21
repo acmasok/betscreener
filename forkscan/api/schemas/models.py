@@ -1,10 +1,18 @@
-from pydantic import BaseModel, EmailStr, constr
+from pydantic import BaseModel, EmailStr, constr, field_validator
 
 
 class UserRegister(BaseModel):
-    email: EmailStr
-    password: constr(min_length=6, max_length=25)
+    email: str
+    password: str
     promokode: str | None = None
+
+    @field_validator("password")
+    def password_strength(cls, v):
+        if len(v) < 8:
+            raise ValueError("Пароль должен быть не короче 8 символов")
+        if v.isdigit() or v.isalpha():
+            raise ValueError("Пароль должен содержать буквы и цифры")
+        return v
 
 
 class UserLogin(BaseModel):
