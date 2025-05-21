@@ -17,7 +17,7 @@ async def register(data: UserRegister, session: AsyncSession = Depends(get_db)):
     # Проверка email
     res = await session.execute(select(User).where(User.email == data.email))
     if res.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Email уже занят")
+        raise HTTPException(status_code=400, detail="Email is already busy")
 
     # Проверка промокода (если указан)
     referrer_id = None
@@ -25,7 +25,7 @@ async def register(data: UserRegister, session: AsyncSession = Depends(get_db)):
         res = await session.execute(select(User).where(User.promo_code == data.promokode))
         referrer = res.scalar_one_or_none()
         if not referrer:
-            raise HTTPException(status_code=400, detail="Промокод не найден")
+            raise HTTPException(status_code=400, detail="The promotional code was not found")
         referrer_id = referrer.id
 
     # Генерируем свой промокод

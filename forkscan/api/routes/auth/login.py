@@ -21,7 +21,7 @@ async def login(data: UserLogin, session: AsyncSession = Depends(get_db)):
     res = await session.execute(select(User).where(User.email == data.email))
     user = res.scalar_one_or_none()
     if not user or not pwd_context.verify(data.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Неверные email или пароль")
+        raise HTTPException(status_code=400, detail="Inappropriate email or password")
 
     # Генерируем JWT (по желанию)
     token_data = {"user_id": user.id, "email": user.email}
