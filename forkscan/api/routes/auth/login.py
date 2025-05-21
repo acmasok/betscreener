@@ -12,7 +12,7 @@ from forkscan.infrastructure.database.models import RefreshToken, User
 from forkscan.infrastructure.database.session import get_db
 from forkscan.services.auth import create_access_token, create_refresh_token
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 # Авторизация

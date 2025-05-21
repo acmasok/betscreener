@@ -8,8 +8,7 @@ from forkscan.infrastructure.database.models import User
 from forkscan.infrastructure.database.session import get_db
 from forkscan.services.auth import generate_promo_code
 
-router = APIRouter()
-
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Регистрация
 @router.post("/register", response_model=UserResponse)

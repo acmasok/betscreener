@@ -29,7 +29,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.now(UTC) + (expires_delta or timedelta(minutes=settings.jwt_expires))
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    return jwt.encode(to_encode, settings.jwt_secret_value, algorithm=settings.jwt_algorithm)
 
 
 def create_refresh_token(user_id: int, email: str, expires_delta: timedelta | None = None):
@@ -38,7 +38,7 @@ def create_refresh_token(user_id: int, email: str, expires_delta: timedelta | No
     )
     jti = str(uuid.uuid4())
     payload = {"user_id": user_id, "email": email, "exp": expires, "jti": jti, "type": "refresh"}
-    refresh_token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    refresh_token = jwt.encode(payload, settings.jwt_secret_value, algorithm=settings.jwt_algorithm)
     return refresh_token, jti, expires
 
 
@@ -83,7 +83,7 @@ async def get_refresh_token(session: AsyncSession, jti: str, user_id: int):
 
 
 def decode_refresh_token(token: str) -> dict:
-    payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    payload = jwt.decode(token, settings.jwt_secret_value, algorithms=[settings.jwt_algorithm])
     if payload.get("type") != "refresh":
         raise ValueError("Invalid token type")
     return payload

@@ -2,10 +2,9 @@ from datetime import UTC, datetime
 from typing import List, Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Numeric
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-Base = declarative_base()
+from forkscan.infrastructure.database.base import Base
 
 
 class User(Base):
@@ -22,6 +21,12 @@ class User(Base):
     )
 
     referrals: Mapped[List["User"]] = relationship(back_populates="referrer")
+    refresh_tokens: Mapped[List["RefreshToken"]] = relationship(
+        "RefreshToken", back_populates="user"
+    )
+    subscriptions: Mapped[List["Subscription"]] = relationship(
+        "Subscription", back_populates="user"
+    )
 
 
 class RefreshToken(Base):
@@ -30,9 +35,12 @@ class RefreshToken(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     token: Mapped[str] = mapped_column(String, unique=True, nullable=False)  # jti или сам JWT
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),  # <--- вот так!
+        default=lambda: datetime.now(UTC)
+    )
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
-    subscriptions: Mapped[list["Subscription"]] = relationship(back_populates="user")
+    # subscriptions: Mapped[list["Subscription"]] = relationship(back_populates="user")
     user: Mapped["User"] = relationship("User", back_populates="refresh_tokens")
 
 class SubscriptionPlan(Base):

@@ -10,7 +10,7 @@ from forkscan.infrastructure.database.session import get_db
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.patch("/me/promo_code", response_model=UserOut)
+@router.patch("/change_promocode", response_model=UserOut)
 async def update_promo_code(
     body: PromoCodeUpdate,
     db: AsyncSession = Depends(get_db),

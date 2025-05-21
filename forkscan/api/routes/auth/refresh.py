@@ -11,7 +11,7 @@ from forkscan.services.auth import (
     find_valid_refresh_token,
 )
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 # Обновляем токен

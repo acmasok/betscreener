@@ -8,7 +8,7 @@ from forkscan.core.config import settings
 from forkscan.infrastructure.database.models import RefreshToken
 from forkscan.infrastructure.database.session import get_db
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/logout")
@@ -18,7 +18,7 @@ async def logout(request: Request, session: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail="No refresh token provided")
     try:
         payload = jwt.decode(
-            refresh_token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+            refresh_token, settings.jwt_secret_value, algorithms=[settings.jwt_algorithm]
         )
         jti = payload.get("jti")
     except Exception:

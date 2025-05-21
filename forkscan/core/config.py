@@ -1,6 +1,11 @@
+from pathlib import Path
 from typing import Literal
+
 from pydantic import Field, PostgresDsn, RedisDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
 
 class Settings(BaseSettings):
     """
@@ -24,7 +29,7 @@ class Settings(BaseSettings):
 
     # База данных
     database_url: PostgresDsn = Field(
-        default="postgresql+asyncpg://user:pass@localhost:5432/forkscan",
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/betscreener",
         description="PostgreSQL connection URL",
     )
     redis_url: RedisDsn = Field(
@@ -47,10 +52,15 @@ class Settings(BaseSettings):
     )
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="allow"  # <-- ЭТО ПОЗВОЛИТ ИГНОРИРОВАТЬ ЛИШНИЕ ПЕРЕМЕННЫЕ В .env
     )
+
+    @property
+    def jwt_secret_value(self) -> str:
+        return self.jwt_secret.get_secret_value()
+
 
 settings = Settings()
