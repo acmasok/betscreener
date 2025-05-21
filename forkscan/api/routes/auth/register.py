@@ -2,13 +2,14 @@ import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from forkscan.core.config import settings
-from forkscan.api.routes.auth.utils import pwd_context, get_ban_time_interval
+
+from forkscan.api.deps import get_redis_client
+from forkscan.api.routes.auth.utils import get_ban_time_interval, pwd_context
 from forkscan.api.schemas.models import UserRegister, UserResponse
+from forkscan.core.config import settings
 from forkscan.infrastructure.database.models import User
 from forkscan.infrastructure.database.session import get_db
 from forkscan.services.auth import generate_promo_code
-from forkscan.api.deps import get_redis_client
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -40,7 +41,11 @@ async def register(
         # logging.warning(f"Banned registration from {ip} for {ban_time} seconds")
         raise HTTPException(
             status_code=429,
-            detail=f"Too many attempts. Try again after {remaining} seconds." if remaining > 0 else "Too many attempts. Try it later."
+            detail=(
+                f"Too many attempts. Try again after {remaining} seconds."
+                if remaining > 0
+                else "Too many attempts. Try it later."
+            ),
         )
     # --- конец лимита ---
 

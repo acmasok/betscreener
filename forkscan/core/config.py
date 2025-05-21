@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import Field, PostgresDsn, RedisDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,32 +9,40 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class Settings(BaseSettings):
     """
-    Конфигурация приложения.
+    Application configuration.
 
     Attributes:
-        env: Окружение (dev/prod)
-        debug: Режим отладки
-        api_prefix: Префикс для API эндпоинтов
-        database_url: URL подключения к PostgreSQL
-        redis_url: URL подключения к Redis
-        jwt_secret: Секретный ключ для JWT токенов
-        jwt_expires: Время жизни JWT токена в минутах
-        update_delay: Задержка обновления данных в секундах
-        free_tier_max_profit: Максимальный профит для бесплатного тарифа в %
+        env: Environment (dev/prod)
+        debug: Debug mode
+        api_prefix: API endpoints prefix
+        database_url: PostgreSQL connection URL
+        redis_url: Redis connection URL
+        jwt_secret: JWT tokens secret key
+        jwt_expires: JWT token lifetime in minutes
+        update_delay: Data update delay in seconds
+        free_tier_max_profit: Maximum profit for free tier in %
     """
 
     env: Literal["dev", "prod"] = "dev"
     debug: bool = False
     api_prefix: str = "/api/v1"
 
-    # Защита от перебора
-    max_failed_attempts: int = 10 # Максимум попыток перед баном
-    min_attempts_for_ban: int = 5 # Минимальное количество ошибок для начала бана
-    initial_ban_time: int = 60 * 10  # 10 минут (в секундах)
-    max_ban_time: int = 86400  # 24 часа (в секундах)
-    ban_multiplier: int = 2  # Множитель для увеличения времени бана
+    # Security Settings
+    rate_limit_window: int = Field(
+        default=300, description="Time window for counting attempts (seconds)"
+    )
+    rate_limit_max_requests: int = Field(
+        default=30, description="Maximum attempts within the window"
+    )
+    ban_threshold: int = Field(default=20, description="Number of attempts before ban")
+    initial_ban_time: int = Field(default=900, description="Initial ban duration (seconds)")
+    max_ban_time: int = Field(default=3600, description="Maximum ban duration (seconds)")
+    ban_multiplier: float = Field(default=2.0, description="Multiplier for increasing ban time")
+    captcha_required: bool = Field(default=True, description="Require CAPTCHA verification")
+    captcha_site_key: Optional[str] = Field(default=None, description="reCAPTCHA site key")
+    captcha_secret_key: Optional[str] = Field(default=None, description="reCAPTCHA secret key")
 
-    # База данных
+    # Database
     database_url: PostgresDsn = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/betscreener",
         description="PostgreSQL connection URL",
@@ -44,7 +52,7 @@ class Settings(BaseSettings):
         description="Redis connection URL",
     )
 
-    # JWT настройки
+    # JWT settings
     jwt_secret: SecretStr = Field(default="secret", description="JWT secret key")
     jwt_expires: int = Field(default=15, description="JWT token expiration in minutes")
     jwt_refresh_expires_days: int = Field(
@@ -52,7 +60,7 @@ class Settings(BaseSettings):
     )
     jwt_algorithm: str = Field(default="HS256", description="JWT algorithm")
 
-    # Настройки сервиса
+    # Service settings
     update_delay: int = Field(default=10, ge=5, description="Update delay in seconds")
     free_tier_max_profit: float = Field(
         default=0.5, ge=0, le=100, description="Free tier max profit %"
@@ -62,7 +70,7 @@ class Settings(BaseSettings):
         env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="allow",  # <-- ЭТО ПОЗВОЛИТ ИГНОРИРОВАТЬ ЛИШНИЕ ПЕРЕМЕННЫЕ В .env
+        extra="allow",
     )
 
     @property

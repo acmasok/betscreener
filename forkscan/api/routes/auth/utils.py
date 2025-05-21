@@ -1,15 +1,17 @@
 from passlib.context import CryptContext
+
 from forkscan.core.config import settings
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def get_ban_time(
-        fails: int,
-        max_attempts: int = settings.max_failed_attempts,
-        min_attempts: int = settings.min_attempts_for_ban,
-        initial_ban: int = settings.initial_ban_time,
-        max_ban: int = settings.max_ban_time,
-        multiplier: int = settings.ban_multiplier,
+    fails: int,
+    max_attempts: int = settings.max_failed_attempts,
+    min_attempts: int = settings.min_attempts_for_ban,
+    initial_ban: int = settings.initial_ban_time,
+    max_ban: int = settings.max_ban_time,
+    multiplier: int = settings.ban_multiplier,
 ) -> int:
     """
     Возвращает время бана с более плавным нарастанием.
@@ -29,6 +31,7 @@ def get_ban_time(
         return max_ban
 
     return min(initial_ban * (multiplier ** (fails - min_attempts)), max_ban)
+
 
 def get_ban_time_interval(attempts: int, min_attempts: int) -> int:
     if attempts <= min_attempts:
