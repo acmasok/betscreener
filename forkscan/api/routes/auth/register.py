@@ -7,6 +7,7 @@ from forkscan.api.schemas.models import UserRegister, UserResponse
 from forkscan.infrastructure.database.models import User
 from forkscan.infrastructure.database.session import get_db
 from forkscan.services.auth import generate_promo_code
+from forkscan.api.routes.utils import check_promocode
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -21,11 +22,8 @@ async def register(data: UserRegister, session: AsyncSession = Depends(get_db)):
     # Проверка промокода (если указан)
     referrer_id = None
     if data.promokode:
-        res = await session.execute(select(User).where(User.promo_code == data.promokode))
-        referrer = res.scalar_one_or_none()
-        if not referrer:
-            raise HTTPException(status_code=400, detail="Промокод не найден")
-        referrer_id = referrer.id
+        data_promo = await check_promocode(data.promokode, session=session)
+        referrer_id = data_promo["referrer_id"]
 
     # Генерируем свой промокод
     my_promo_code = generate_promo_code()
