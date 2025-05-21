@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     debug: bool = False
     api_prefix: str = "/api/v1"
 
+    # Защита от перебора
+    max_failed_attempts: int = 5
+    ban_seconds: int = 30 * 60
+
     # База данных
     database_url: PostgresDsn = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/betscreener",

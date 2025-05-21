@@ -1,27 +1,51 @@
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
+from forkscan.api.deps import get_redis_client
 from forkscan.api.routes.auth.utils import pwd_context
 from forkscan.api.schemas.models import UserLogin
 from forkscan.core.config import settings
 from forkscan.infrastructure.database.models import RefreshToken, User
 from forkscan.infrastructure.database.session import get_db
 from forkscan.services.auth import create_access_token, create_refresh_token
+import redis.asyncio as redis
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 # Авторизация
 @router.post("/login")
-async def login(data: UserLogin, session: AsyncSession = Depends(get_db)):
+async def login(
+    data: UserLogin,
+    session: AsyncSession = Depends(get_db),
+    request: Request = None,
+    redis_client: redis.Redis = Depends(get_redis_client)
+):
+    # Получаем IP пользователя (можно сделать по email, но IP лучше для защиты)
+    ip = request.client.host
+    key = f"login_fail:{ip}"
+
+    # 1. Проверяем, есть ли бан
+    fail_count = await redis_client.get(key)
+    if fail_count and int(fail_count) >= settings.max_failed_attempts:
+        raise HTTPException(status_code=429, detail="Too many attempts. Try it later.")
+
+    # 2. Ищем пользователя
     res = await session.execute(select(User).where(User.email == data.email))
     user = res.scalar_one_or_none()
     if not user or not pwd_context.verify(data.password, user.hashed_password):
+        # 3. Неудачная попытка: увеличиваем счетчик
+        fails = await redis_client.incr(key)
+        if fails == 1:
+            await redis_client.expire(key, settings.ban_seconds)
         raise HTTPException(status_code=400, detail="Inappropriate email or password")
+
+    # 4. Успешная попытка: сбрасываем счетчик
+    await redis_client.delete(key)
 
     # Генерируем JWT (по желанию)
     token_data = {"user_id": user.id, "email": user.email}
